@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="zh-CN">
+ <head> 
+  <meta charset="utf-8"> 
+  <link rel="canonical" href="https://blog.csdn.net/weixin_30650039/article/details/96502923"> 
+  <meta http-equiv="content-type" content="text/html; charset=utf-8"> 
+  <meta name="renderer" content="webkit"> 
+  <meta name="force-rendering" content="webkit"> 
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"> 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"> 
+  <meta name="report" content="{&quot;pid&quot;: &quot;blog&quot;, &quot;spm&quot;:&quot;1001.2101&quot;}">  
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <link rel="alternate" media="handheld" href="#"> 
+  <meta name="shenma-site-verification" content="5a59773ab8077d4a62bf469ab966a63b_1497598848"> 
+  <meta name="applicable-device" content="pc"> 
+  <link href="https://g.csdnimg.cn/static/logo/favicon32.ico" rel="shortcut icon" type="image/x-icon"> 
+  <title>Usart的单线半双工模式（stm32F10x系列）-CSDN博客</title>  
+  <meta name="keywords" content="usart单线半双工"> 
+  <meta name="description" content="文章浏览阅读2.3k次。　　这两天折腾CTS/RTS硬件流控，看到说232协议的CTS/RTS只是用来做半双工换向使用的。正好手头上有块stm32的板子，看了看stm32的Usart，竟然发现支持的是单线半双工。232里面毕竟4根线，支持半双工也是各自独立地物理信道（大胆猜测，回头回顾一下以前草草使用的双线485，看看它的半双工）。第一次注意到。之所以引起我的兴趣，是因为，我好奇stm32的单线半双工有2点。　　第一..._usart单线半双工"> 
+  <link rel="stylesheet" type="text/css" href="https://csdnimg.cn/release/blogv2/dist/pc/css/detail_enter-0b00df95ff.min.css">  
+  <link rel="stylesheet" type="text/css" href="https://csdnimg.cn/release/blogv2/dist/pc/themesSkin/skin-yellow/skin-yellow-28d34ab5fa.min.css">   
+  <meta name="toolbar" content="{&quot;type&quot;:&quot;0&quot;,&quot;fixModel&quot;:&quot;1&quot;}">   
+  <link rel="stylesheet" type="text/css" href="https://csdnimg.cn/public/sandalstrap/1.4/css/sandalstrap.min.css"> 
+  <style>.MathJax_Display {text-align: center; margin: 1em 0em; position: relative; display: block!important; text-indent: 0; max-width: none; max-height: none; min-width: 0; min-height: 0; width: 100%} .MathJax .merror {background-color: #FFFF88; color: #CC0000; border: 1px solid #CC0000; padding: 1px 3px; font-style: normal; font-size: 90%} .MathJax .MJX-monospace {font-family: monospace} .MathJax .MJX-sans-serif {font-family: sans-serif} #MathJax_Tooltip {background-color: InfoBackground; color: InfoText; border: 1px solid black; box-shadow: 2px 2px 5px #AAAAAA; -webkit-box-shadow: 2px 2px 5px #AAAAAA; -moz-box-shadow: 2px 2px 5px #AAAAAA; -khtml-box-shadow: 2px 2px 5px #AAAAAA; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true'); padding: 3px 4px; z-index: 401; position: absolute; left: 0; top: 0; width: auto; height: auto; display: none} .MathJax {display: inline; font-style: normal; font-weight: normal; line-height: normal; font-size: 100%; font-size-adjust: none; text-indent: 0; text-align: left; text-transform: none; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; direction: ltr; max-width: none; max-height: none; min-width: 0; min-height: 0; border: 0; padding: 0; margin: 0} .MathJax:focus, body :focus .MathJax {display: inline-table} .MathJax.MathJax_FullWidth {text-align: center; display: table-cell!important; width: 10000em!important} .MathJax img, .MathJax nobr, .MathJax a {border: 0; padding: 0; margin: 0; max-width: none; max-height: none; min-width: 0; min-height: 0; vertical-align: 0; line-height: normal; text-decoration: none} img.MathJax_strut {border: 0!important; padding: 0!important; margin: 0!important; vertical-align: 0!important} .MathJax span {display: inline; position: static; border: 0; padding: 0; margin: 0; vertical-align: 0; line-height: normal; text-decoration: none} .MathJax nobr {white-space: nowrap!important} .MathJax img {display: inline!important; float: none!important} .MathJax * {transition: none; -webkit-transition: none; -moz-transition: none; -ms-transition: none; -o-transition: none} .MathJax_Processing {visibility: hidden; position: fixed; width: 0; height: 0; overflow: hidden} .MathJax_Processed {display: none!important} .MathJax_ExBox {display: block!important; overflow: hidden; width: 1px; height: 60ex; min-height: 0; max-height: none} .MathJax .MathJax_EmBox {display: block!important; overflow: hidden; width: 1px; height: 60em; min-height: 0; max-height: none} .MathJax_LineBox {display: table!important} .MathJax_LineBox span {display: table-cell!important; width: 10000em!important; min-width: 0; max-width: none; padding: 0; border: 0; margin: 0} .MathJax .MathJax_HitBox {cursor: text; background: white; opacity: 0; filter: alpha(opacity=0)} .MathJax .MathJax_HitBox * {filter: none; opacity: 1; background: transparent} #MathJax_Tooltip * {filter: none; opacity: 1; background: transparent} @font-face {font-family: MathJax_Main; src: url('https://csdnimg.cn/release/blog_mathjax/fonts/HTML-CSS/TeX/woff/MathJax_Main-Regular.woff?V=2.7.2') format('woff'), url('https://csdnimg.cn/release/blog_mathjax/fonts/HTML-CSS/TeX/otf/MathJax_Main-Regular.otf?V=2.7.2') format('opentype')} @font-face {font-family: MathJax_Main-bold; src: url('https://csdnimg.cn/release/blog_mathjax/fonts/HTML-CSS/TeX/woff/MathJax_Main-Bold.woff?V=2.7.2') format('woff'), url('https://csdnimg.cn/release/blog_mathjax/fonts/HTML-CSS/TeX/otf/MathJax_Main-Bold.otf?V=2.7.2') format('opentype')} @font-face {font-family: MathJax_Main-italic; src: url('https://csdnimg.cn/release/blog_mathjax/fonts/HTML-CSS/TeX/woff/MathJax_Main-Italic.woff?V=2.7.2') format('woff'), url('https://csdnimg.cn/release/blog_mathjax/fonts/HTML-CSS/TeX/otf/MathJax_Main-Italic.otf?V=2.7.2') format('opentype')} @font-face {font-family: MathJax_Math-italic; src: url('https://csdnimg.cn/release/blog_mathjax/fonts/HTML-CSS/TeX/woff/MathJax_Math-Italic.woff?V=2.7.2') format('woff'), url('https://csdnimg.cn/release/blog_mathjax/fonts/HTML-CSS/TeX/otf/MathJax_Math-Italic.otf?V=2.7.2') format('opentype')} @font-face {font-family: MathJax_Caligraphic; src: url('https://csdnimg.cn/release/blog_mathjax/fonts/HTML-CSS/TeX/woff/MathJax_Caligraphic-Regular.woff?V=2.7.2') format('woff'), url('https://csdnimg.cn/release/blog_mathjax/fonts/HTML-CSS/TeX/otf/MathJax_Caligraphic-Regular.otf?V=2.7.2') format('opentype')} @font-face {font-family: MathJax_Size1; src: url('https://csdnimg.cn/release/blog_mathjax/fonts/HTML-CSS/TeX/woff/MathJax_Size1-Regular.woff?V=2.7.2') format('woff'), url('https://csdnimg.cn/release/blog_mathjax/fonts/HTML-CSS/TeX/otf/MathJax_Size1-Regular.otf?V=2.7.2') format('opentype')} @font-face {font-family: MathJax_Size2; src: url('https://csdnimg.cn/release/blog_mathjax/fonts/HTML-CSS/TeX/woff/MathJax_Size2-Regular.woff?V=2.7.2') format('woff'), url('https://csdnimg.cn/release/blog_mathjax/fonts/HTML-CSS/TeX/otf/MathJax_Size2-Regular.otf?V=2.7.2') format('opentype')} @font-face {font-family: MathJax_Size3; src: url('https://csdnimg.cn/release/blog_mathjax/fonts/HTML-CSS/TeX/woff/MathJax_Size3-Regular.woff?V=2.7.2') format('woff'), url('https://csdnimg.cn/release/blog_mathjax/fonts/HTML-CSS/TeX/otf/MathJax_Size3-Regular.otf?V=2.7.2') format('opentype')} @font-face {font-family: MathJax_Size4; src: url('https://csdnimg.cn/release/blog_mathjax/fonts/HTML-CSS/TeX/woff/MathJax_Size4-Regular.woff?V=2.7.2') format('woff'), url('https://csdnimg.cn/release/blog_mathjax/fonts/HTML-CSS/TeX/otf/MathJax_Size4-Regular.otf?V=2.7.2') format('opentype')} .MathJax .noError {vertical-align: ; font-size: 90%; text-align: left; color: black; padding: 1px 3px; border: 1px solid}</style>   
+ </head> 
+ <body class="nodata " style=""> 
+  <div id="toolbarBox" style="min-height: 48px;"></div>    
+  <link rel="stylesheet" href="https://csdnimg.cn/release/blogv2/dist/pc/css/blog_code-01256533b5.min.css"> 
+  <link rel="stylesheet" href="https://csdnimg.cn/release/blogv2/dist/mdeditor/css/editerView/chart-3456820cac.css"> 
+  <link rel="stylesheet" href="https://g.csdnimg.cn/lib/swiper/6.0.4/css/swiper.css">   
+  <div class="main_father clearfix  justify-content-center mainfather-concision" style="height:100%;"> 
+   <div class="container clearfix container-concision" id="mainBox" style="width:100%">  
+    <main style="width:100%">  
+     <div class="blog-content-box"> 
+      <div class="article-header-box"> 
+       <div class="article-header"> 
+        <div class="article-title-box"> 
+         <h1 class="title-article" id="articleContentId">Usart的单线半双工模式（stm32F10x系列）</h1> 
+        </div> 
+        <div class="article-info-box"> 
+         <div class="article-bar-top"> 
+          <img class="article-type-img" src="https://ziquyun.com/main/csdn/img?url=https%3A%2F%2Fcsdnimg.cn%2Frelease%2Fblogv2%2Fdist%2Fpc%2Fimg%2Freprint.png&amp;rfUrl=https%3A%2F%2Fblog.csdn.net%2Fweixin_30650039%2Farticle%2Fdetails%2F96502923" alt=""> 
+          <div class="bar-content"> 
+           <img class="article-vip-img article-heard-img" src="https://ziquyun.com/main/csdn/img?url=https%3A%2F%2Fcsdnimg.cn%2Frelease%2Fblogv2%2Fdist%2Fpc%2Fimg%2FidentityVip.png&amp;rfUrl=https%3A%2F%2Fblog.csdn.net%2Fweixin_30650039%2Farticle%2Fdetails%2F96502923" alt=""> 
+           <span class="article-vip-text vip_article"> VIP文章</span> 
+           <a class="follow-nickName " href="https://blog.csdn.net/weixin_30650039" target="_blank" rel="noopener" title="weixin_30650039">weixin_30650039</a> 
+           <img class="article-time-img article-heard-img" src="https://ziquyun.com/main/csdn/img?url=https%3A%2F%2Fcsdnimg.cn%2Frelease%2Fblogv2%2Fdist%2Fpc%2Fimg%2FnewCurrentTime2.png&amp;rfUrl=https%3A%2F%2Fblog.csdn.net%2Fweixin_30650039%2Farticle%2Fdetails%2F96502923" alt=""> 
+           <span class="time">于&nbsp;2015-10-28 20:45:00&nbsp;发布</span> 
+           <div class="read-count-box"> 
+            <img class="article-read-img article-heard-img" src="https://ziquyun.com/main/csdn/img?url=https%3A%2F%2Fcsdnimg.cn%2Frelease%2Fblogv2%2Fdist%2Fpc%2Fimg%2FarticleReadEyes2.png&amp;rfUrl=https%3A%2F%2Fblog.csdn.net%2Fweixin_30650039%2Farticle%2Fdetails%2F96502923" alt=""> 
+            <span class="read-count">阅读量2.3k</span> 
+            <a id="blog_detail_zk_collection" class="un-collection" data-report-click="{&quot;mod&quot;:&quot;popu_823&quot;,&quot;spm&quot;:&quot;1001.2101.3001.4232&quot;,&quot;ab&quot;:&quot;new&quot;}"> <img class="article-collect-img article-heard-img un-collect-status isdefault" style="display:inline-block" src="https://ziquyun.com/main/csdn/img?url=https%3A%2F%2Fcsdnimg.cn%2Frelease%2Fblogv2%2Fdist%2Fpc%2Fimg%2FtobarCollect2.png&amp;rfUrl=https%3A%2F%2Fblog.csdn.net%2Fweixin_30650039%2Farticle%2Fdetails%2F96502923" alt=""> <img class="article-collect-img article-heard-img collect-status isactive" style="display:none" src="https://ziquyun.com/main/csdn/img?url=https%3A%2F%2Fcsdnimg.cn%2Frelease%2Fblogv2%2Fdist%2Fpc%2Fimg%2FtobarCollectionActive2.png&amp;rfUrl=https%3A%2F%2Fblog.csdn.net%2Fweixin_30650039%2Farticle%2Fdetails%2F96502923" alt=""> <span class="name">收藏</span> <span class="get-collection"> 23 </span> </a> 
+            <div class="read-count-box is-like"> 
+             <img class="article-read-img article-heard-img" style="display:none" id="is-like-imgactive-new" src="https://ziquyun.com/main/csdn/img?url=https%3A%2F%2Fcsdnimg.cn%2Frelease%2Fblogv2%2Fdist%2Fpc%2Fimg%2FnewHeart2023Active.png&amp;rfUrl=https%3A%2F%2Fblog.csdn.net%2Fweixin_30650039%2Farticle%2Fdetails%2F96502923" alt=""> 
+             <img class="article-read-img article-heard-img" style="display:block" id="is-like-img-new" src="https://ziquyun.com/main/csdn/img?url=https%3A%2F%2Fcsdnimg.cn%2Frelease%2Fblogv2%2Fdist%2Fpc%2Fimg%2FnewHeart2023Black.png&amp;rfUrl=https%3A%2F%2Fblog.csdn.net%2Fweixin_30650039%2Farticle%2Fdetails%2F96502923" alt=""> 
+             <span class="read-count" id="blog-digg-num">点赞数 1 </span> 
+            </div> 
+           </div> 
+          </div> 
+         </div> 
+         <div class="blog-tags-box"> 
+          <div class="tags-box artic-tag-box"> 
+           <span class="label">文章标签：</span> 
+           <a rel="noopener" data-report-click="{&quot;mod&quot;:&quot;popu_626&quot;,&quot;spm&quot;:&quot;1001.2101.3001.4223&quot;,&quot;strategy&quot;:&quot;嵌入式&quot;,&quot;ab&quot;:&quot;new&quot;,&quot;extra&quot;:&quot;{\&quot;searchword\&quot;:\&quot;嵌入式\&quot;}&quot;}" class="tag-link" href="https://so.csdn.net/so/search/s.do?q=%E5%B5%8C%E5%85%A5%E5%BC%8F&amp;t=all&amp;o=vip&amp;s=&amp;l=&amp;f=&amp;viparticle=" target="_blank">嵌入式</a> 
+          </div> 
+         </div> 
+         <div class="slide-content-box"> 
+          <div class="article-source-link">
+            原文链接：
+           <a href="http://www.cnblogs.com/zurphy/p/4918589.html" target="_blank" rel="noopener">http://www.cnblogs.com/zurphy/p/4918589.html</a> 
+          </div> 
+         </div> 
+         <div class="operating"> 
+          <a class="href-article-edit slide-toggle">版权</a> 
+         </div> 
+        </div> 
+       </div> 
+      </div> 
+      <div id="blogHuaweiyunAdvert"></div> 
+      <article class="baidu_pl"> 
+       <div id="article_content" class="article_content clearfix"> 
+        <link rel="stylesheet" href="https://csdnimg.cn/release/blogv2/dist/mdeditor/css/editerView/kdoc_html_views-1a98987dfd.css"> 
+        <link rel="stylesheet" href="https://csdnimg.cn/release/blogv2/dist/mdeditor/css/editerView/ck_htmledit_views-044f2cf1dc.css"> 
+        <div id="content_views" class="htmledit_views"> 
+         <div id="cnblogs_post_body" class="blogpost-body"> 
+          <p>　　这两天折腾CTS/RTS硬件流控，看到说232协议的CTS/RTS只是用来做半双工换向使用的。正好手头上有块stm32的板子，看了看stm32的Usart，竟然发现支持的是单线半双工。232里面毕竟4根线，支持半双工也是各自独立地物理信道（大胆猜测，回头回顾一下以前草草使用的双线485，看看它的半双工）。第一次注意到。之所以引起我的兴趣，是因为，我好奇stm32的<strong>单线</strong>半双工有2点。</p> 
+          <p>　　第一：有啥用。结果上网一搜，还真有人用它来控制AX-12数字舵机。</p> 
+          <p>　　第二：怎么实现的。我印象中stm32的io口是需要配置方向的。单线半双工需要两端即当输入又当输出。操作不当很容易把IO口的mos管烧掉啊。</p> 
+          <p>　　于是折腾了半天。最后确实调通了。管子也没烧。</p> 
+          <p>　　参考手册上关于这块，很简单说的。</p> 
+          <p>　　单线半双方模式通过设置USART_CR3寄存器的HDSEL位选择。在这个模式里，下面的位必须保持清零状态：<br>　　　　● USART_CR2寄存器的LINEN和CLKEN位<br>　　　　● USART_CR3寄存器的SCEN和IREN位<br>　　USART可以配置成遵循单线半双工协议。在单线半双工模式下，<span style="color:#ff0000;"><strong>TX和RX引脚在芯片内部互连</strong></span>。使用控制位”HALF DUPLEX SEL”(USART_CR3中的HDSEL位)选择半双工和全双工通信。<br>　　当HDSEL为’1’时<br>　　　　●<span style="color:#ff0000;"> <strong>RX不再被使用</strong></span><br>　　　　● 当没有数据传输时，TX总是被释放。因此，它在空闲状态的或接收状态时表现为一个标准I/O口。这就意味该I/O在不被USART驱动时，必须配置成<strong><span style="color:#ff0000;">悬空输入(或开漏的输出高)</span></strong>。<br>　　除此以外，通信与正常USART模式类似。由软件来管理线上的冲突(例如通过使用一个中央仲裁器)。特别的是，发送从不会被硬件所阻碍。当TE位被设置时，只要数据一写到数据寄存器上，发送就继续。</p> 
+          <p>基本上比较模糊，但是也能猜出个大概。也就是双方的USart通过TX-Tx相连。而且Tx管脚IO状态设置成<span style="color:#ff0000;"><strong>悬空输入(或开漏的输出高)。</strong><span style="color:#000000;">这个地方其实出现了个问题，因为手册第9章GPIO配置的地方明确写道：</span><br></span></p> 
+          <p><span style="color:#ff0000;"><span style="color:#000000;"><img src="https://ziquyun.com/main/csdn/img?url=https%3A%2F%2Fimages2015.cnblogs.com%2Fblog%2F810581%2F201510%2F810581-20151028204033325-302100377.png&amp;rfUrl=https%3A%2F%2Fblog.csdn.net%2Fweixin_30650039%2Farticle%2Fdetails%2F96502923" alt="" width="484" height="145"></span></span></p> 
+          <p>&nbsp;</p> 
+          <p>Tx管脚在用作半双工模式时，GPIO应该设为推挽复用输出。所以这个悬空输入其实是有问题的。因为手册上写道：</p> 
+          <p>当I/O端口配置为输入时： </p> 
+          <p>● 输出缓冲器被禁止</p> 
+          <p> ● 施密特触发输入被激活 </p> 
+          <p>● 根据输入配置(上拉，下拉或浮动)的不同，弱上拉和下拉电阻被连接</p> 
+          <p> ● 出现在I/O脚上的数据在每个APB2时钟被采样到输入数据寄存器 </p> 
+          <p>● 对输入数据寄存器的读访问可得到I/O状态</p> 
+          <p><img src="https://ziquyun.com/main/csdn/img?url=https%3A%2F%2Fimages2015.cnblogs.com%2Fblog%2F810581%2F201510%2F810581-20151028204236482-324884022.png&amp;rfUrl=https%3A%2F%2Fblog.csdn.net%2Fweixin_30650039%2Farticle%2Fdetails%2F96502923" alt="" width="610" height="309"></p> 
+          <p>也就是说输出根本输出不来。所以这里使用<span style="color:#ff0000;"><strong>复用推挽输出或者复用开漏输出。</strong><span style="color:#000000;">我估计很多人就是管脚没配置对所以没调通。。。而且既然<strong>一定要外接上拉电阻至3.3V</strong>，不仅是开漏输出，复用推挽也是，实践证明，不然通信失败。</span></span></p> 
+          <p><span style="color:#ff0000;"><span style="color:#000000;">开漏输出好理解，加上拉后可以输出正常高低电平，而且stm32的IO口设置成开漏输出后，其实是双向的，这点可以从下图看出。手册上说配置成输出后，采样输入数据寄存器里的值即可得到IO状态。</span></span></p> 
+          <p><span style="color:#ff0000;"><span style="color:#000000;"><img src="https://ziquyun.com/main/csdn/img?url=https%3A%2F%2Fimages2015.cnblogs.com%2Fblog%2F810581%2F201510%2F810581-20151028205111654-1315611853.png&amp;rfUrl=https%3A%2F%2Fblog.csdn.net%2Fweixin_30650039%2Farticle%2Fdetails%2F96502923" alt="" width="611" height="312"></span></span></p> 
+          <p>&nbsp;</p> 
+          <p>从图上还可以看到。IO管脚内部是有稳压管的。有的管脚会被稳压到3.3VVDD，有的会被稳压到5V，VDD_FT，所以网上说什么上拉至5V其实指得是在FT管脚上才能实现的，不然再上拉也拉不上去。顶多3.3,再多就烧了。</p> 
+          <p>单向半双工（Half Deplux）的实现也比较简单，代码如下。</p> 
+          <div class="cnblogs_code"> 
+           <pre style="max-height:100%"><span style="color:#0000ff;">int</span> main(<span style="color:#0000ff;">void</span><span style="color:#000000;">)
+{
+    usart_Configuration();    
+
+  </span><span style="color:#0000ff;">while</span>(NbrOfDataToRead2--<span style="color:#000000;">)
+  {
+    </span><span style="color:#008000;">/*</span><span style="color:#008000;"> Wait until end of transmit </span><span style="color:#008000;">*/</span>
+    <span style="color:#0000ff;">while</span>(USART_GetFlagStatus(USART1, USART_FLAG_TXE) ==<span style="color:#000000;"> RESET)
+    {
+
+    }
+    </span><span style="color:#008000;">/*</span><span style="color:#008000;"> Write one byte in the USARTy Transmit Data Register </span><span style="color:#008000;">*/</span><span style="color:#000000;">
+    
+    USART_SendData(USART1, TxBuffer1[TxCounter1</span>++<span style="color:#000000;">]);
+    </span><span style="color:#008000;">//</span><span style="color:#008000;">    GPIO_SetBits(GPIOB,GPIO_Pin_0);    </span>
+    <span style="color:#008000;">/*</span><span style="color:#008000;"> Wait the byte is entirely received by USARTz </span><span style="color:#008000;">*/</span>  
+    <span style="color:#0000ff;">while</span>(USART_GetFlagStatus(USART2, USART_FLAG_RXNE) ==<span style="color:#000000;"> RESET)
+    {
+    }
+    </span><span style="color:#008000;">/*</span><span style="color:#008000;"> Store the received byte in the RxBuffer2 </span><span style="color:#008000;">*/</span><span style="color:#000000;">
+    RxBuffer2[RxCounter2</span>++] =<span style="color:#000000;"> USART_ReceiveData(USART2);
+    </span><span style="color:#008000;">//</span><span style="color:#008000;">GPIO_SetBits(GPIOB,GPIO_Pin_0);</span>
+<span style="color:#000000;">  }
+   USART_ReceiveData(USART1);
+  </span><span style="color:#0000ff;">while</span>(NbrOfDataToRead1--<span style="color:#000000;">)
+  { 
+    </span><span style="color:#008000;">/*</span><span style="color:#008000;"> Wait until end of transmit </span><span style="color:#008000;">*/</span>
+    <span style="color:#0000ff;">while</span>(USART_GetFlagStatus(USART2, USART_FLAG_TXE)==<span style="color:#000000;"> RESET)
+    {
+    }
+    </span><span style="color:#008000;">/*</span><span style="color:#008000;"> Write one byte in the USARTz Transmit Data Register </span><span style="color:#008000;">*/</span><span style="color:#000000;">
+    USART_SendData(USART2, TxBuffer2[TxCounter2</span>++<span style="color:#000000;">]);
+
+    </span><span style="color:#008000;">/*</span><span style="color:#008000;"> Wait the byte is entirely received by USARTy </span><span style="color:#008000;">*/</span>
+    <span style="color:#0000ff;">while</span>(USART_GetFlagStatus(USART1,USART_FLAG_RXNE) ==<span style="color:#000000;"> RESET)
+    {
+    }
+    </span><span style="color:#008000;">/*</span><span style="color:#008000;"> Store the received byte in the RxBuffer1 </span><span style="color:#008000;">*/</span><span style="color:#000000;">
+    RxBuffer1[RxCounter1</span>++] =<span style="color:#000000;"> USART_ReceiveData(USART1);
+  }
+
+
+    </span><span style="color:#008000;">/*</span><span style="color:#008000;"> Check the received data with the send ones </span><span style="color:#008000;">*/</span><span style="color:#000000;">
+  TransferStatus1 </span>=<span style="color:#000000;"> Buffercmp(TxBuffer1, RxBuffer2, TxBufferSize1);
+  </span><span style="color:#0000ff;">if</span><span style="color:#000000;">(TransferStatus1)
+  {GPIO_SetBits(GPIOB,GPIO_Pin_0);}
+  </span><span style="color:#008000;">/*</span><span style="color:#008000;"> TransferStatus = PASSED, if the data transmitted from USARTy and  
+     received by USARTz are the same </span><span style="color:#008000;">*/</span>
+  <span style="color:#008000;">/*</span><span style="color:#008000;"> TransferStatus = FAILED, if the data transmitted from USARTy and 
+     received by USARTz are different </span><span style="color:#008000;">*/</span><span style="color:#000000;">
+  TransferStatus2 </span>=<span style="color:#000000;"> Buffercmp(TxBuffer2, RxBuffer1, TxBufferSize2);
+    </span><span style="color:#0000ff;">if</span><span style="color:#000000;">(TransferStatus2)
+  {GPIO_SetBits(GPIOB,GPIO_Pin_1);}
+  </span><span style="color:#0000ff;">while</span> (<span style="color:#800080;">1</span><span style="color:#000000;">)
+  {
+  }
+
+
+</span><span style="color:#008000;">//</span><span style="color:#008000;">IO配置部分</span>
+<span style="color:#0000ff;">void</span> Rcc_Configuration(<span style="color:#0000ff;">void</span><span style="color:#000000;">)
+{
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD </span>| RCC_APB2Periph_GPIOB |<span style="color:#000000;"> RCC_APB2Periph_AFIO,ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1,ENABLE);
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2,ENABLE);
+}
+
+</span><span style="color:#0000ff;">void</span> UsartGPIO_Configuration(<span style="color:#0000ff;">void</span><span style="color:#000000;">)
+{
+    GPIO_InitTypeDef GPIO_InitStructure;
+
+    GPIO_PinRemapConfig(GPIO_Remap_USART2, ENABLE);
+    GPIO_PinRemapConfig(GPIO_Remap_USART1, ENABLE);
+    
+    GPIO_InitStructure.GPIO_Pin </span>=<span style="color:#000000;"> GPIO_Pin_6;             
+    GPIO_InitStructure.GPIO_Mode </span>=<span style="color:#000000;"> GPIO_Mode_AF_PP; 
+    GPIO_InitStructure.GPIO_Speed </span>=<span style="color:#000000;"> GPIO_Speed_50MHz;  
+    GPIO_Init(GPIOB, </span>&amp;<span style="color:#000000;">GPIO_InitStructure);  //Tx1         
+    
+    GPIO_InitStructure.GPIO_Pin </span>=<span style="color:#000000;"> GPIO_Pin_5;            
+    </span><span style="color:#008000;">//</span><span style="color:#008000;">GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING; </span>
+    GPIO_Init(GPIOD, &amp;<span style="color:#000000;">GPIO_InitStructure);//Tx2
+
+    GPIO_InitStructure.GPIO_Pin </span>=<span style="color:#000000;"> GPIO_Pin_0;
+    GPIO_InitStructure.GPIO_Mode </span>=<span style="color:#000000;"> GPIO_Mode_Out_PP;
+    GPIO_Init(GPIOB, </span>&amp;GPIO_InitStructure);      <span style="color:#008000;">//</span><span style="color:#008000;">PB0---LED0</span>
+    GPIO_InitStructure.GPIO_Pin =<span style="color:#000000;"> GPIO_Pin_1;
+    GPIO_Init(GPIOB, </span>&amp;GPIO_InitStructure);      <span style="color:#008000;">//</span><span style="color:#008000;">PB1---LED1s</span>
+<span style="color:#000000;">
+}
+
+</span><span style="color:#0000ff;">void</span> usart_Configuration(<span style="color:#0000ff;">void</span><span style="color:#000000;">)
+{
+    USART_InitTypeDef USART_InitStructure;
+
+    Rcc_Configuration();
+    
+    UsartGPIO_Configuration();
+
+    USART_InitStructure.USART_BaudRate </span>= <span style="color:#800080;">230400</span><span style="color:#000000;">;
+    USART_InitStructure.USART_WordLength </span>=<span style="color:#000000;"> USART_WordLength_8b;
+    USART_InitStructure.USART_StopBits </span>=<span style="color:#000000;"> USART_StopBits_1;
+    USART_InitStructure.USART_Parity </span>=<span style="color:#000000;"> USART_Parity_No;
+    USART_InitStructure.USART_HardwareFlowControl </span>=<span style="color:#000000;"> USART_HardwareFlowControl_None;
+    USART_InitStructure.USART_Mode </span>= USART_Mode_Rx |<span style="color:#000000;"> USART_Mode_Tx;
+    
+    USART_Init(USART1, </span>&amp;<span style="color:#000000;">USART_InitStructure);
+    USART_Init(USART2, </span>&amp;<span style="color:#000000;">USART_InitStructure);
+
+    USART_HalfDuplexCmd(USART1,ENABLE);
+    USART_HalfDuplexCmd(USART2,ENABLE);
+    
+    USART_Cmd(USART1, ENABLE);
+    USART_Cmd(USART2, ENABLE);
+}</span></pre> 
+          </div> 
+          <p>　　最后，but也是我没想明白的地方。为什么设置成复用推挽输出，依旧能通信成功而且没烧掉mos管。这里我猜测，是由于虽然你设置了管脚位推挽输出，但是你也设置了HalfDelpux模式，其实Tx这时候默认其实是输入的。只有在你往发送数据寄存器TDR里面写入数据时，标志位TXE置1，然后由硬件将IO口设置成推挽输出。这样对面Tx仍然是输入，所以能够通信输出，不存在mos管被短路的可能性存在。但是手册上没有更详细的介绍了。所以只能是个人猜测。</p> 
+         </div> 
+         <p>转载于:https://www.cnblogs.com/zurphy/p/4918589.html</p> 
+        </div> 
+       </div> 
+       <div id="treeSkill"></div> 
+       <div id="recommendDown"> 
+       </div> 
+      </article>  
+     </div> 
+     <div class="directory-boxshadow-dialog" style="display:none;"> 
+      <div class="directory-boxshadow-dialog-box"> 
+      </div> 
+      <div class="vip-limited-time-offer-box"> 
+       <div class="vip-limited-time-offer-content"> 
+        <img class="limited-img" src="https://ziquyun.com/main/csdn/img?url=https%3A%2F%2Fcsdnimg.cn%2Frelease%2Fblogv2%2Fdist%2Fpc%2Fimg%2Fvip-limited-close.png&amp;rfUrl=https%3A%2F%2Fblog.csdn.net%2Fweixin_30650039%2Farticle%2Fdetails%2F96502923"> 
+        <div class="limited-box"> 
+         <span class="limited-num"></span> 
+         <span class="limited-quan"> 优惠劵</span> 
+        </div> 
+        <div class="limited-time-box"> 
+         <span class="time-hour"></span> 
+         <span class="time-minite"></span> 
+         <span class="time-second"></span> 
+        </div> 
+        <a class="limited-time-btn" href="https://mall.csdn.net/vip" data-report-click="{&quot;spm&quot;:&quot;1001.2101.3001.9621&quot;}" data-report-query="spm=1001.2101.3001.9621"></a> 
+       </div> 
+      </div> 
+     </div>     
+     <a id="commentBox" name="commentBox"></a>      
+    </main>     
+   </div> 
+   <div class="recommend-right align-items-stretch clearfix" id="rightAside" data-type="recommend"> 
+    <aside class="recommend-right_aside"> 
+     <div id="recommend-right"> 
+      <div class="flex-column aside-box groupfile" id="groupfile"> 
+       <div class="groupfile-div"> 
+        <h3 class="aside-title">目录</h3> 
+        <div class="align-items-stretch group_item"> 
+         <div class="pos-box"> 
+          <div class="scroll-box"> 
+           <div class="toc-box"></div> 
+          </div> 
+         </div> 
+        </div> 
+       </div> 
+      </div> 
+      <div id="asideArchive" class="aside-box" style=" width:300px;"> 
+       <h3 class="aside-title">最新文章</h3> 
+       <div class="aside-content"> 
+        <ul class="inf_list clearfix"> 
+         <li class="clearfix"> <a href="https://blog.csdn.net/weixin_30650039/article/details/101863905" target="_blank" data-report-click="{&quot;mod&quot;:&quot;popu_382&quot;,&quot;spm&quot;:&quot;1001.2101.3001.4136&quot;,&quot;dest&quot;:&quot;https://blog.csdn.net/weixin_30650039/article/details/101863905&quot;,&quot;ab&quot;:&quot;new&quot;}" data-report-view="{&quot;mod&quot;:&quot;popu_382&quot;,&quot;dest&quot;:&quot;https://blog.csdn.net/weixin_30650039/article/details/101863905&quot;,&quot;ab&quot;:&quot;new&quot;}">文件的隐藏属性</a> </li> 
+         <li class="clearfix"> <a href="https://blog.csdn.net/weixin_30650039/article/details/102341403" target="_blank" data-report-click="{&quot;mod&quot;:&quot;popu_382&quot;,&quot;spm&quot;:&quot;1001.2101.3001.4136&quot;,&quot;dest&quot;:&quot;https://blog.csdn.net/weixin_30650039/article/details/102341403&quot;,&quot;ab&quot;:&quot;new&quot;}" data-report-view="{&quot;mod&quot;:&quot;popu_382&quot;,&quot;dest&quot;:&quot;https://blog.csdn.net/weixin_30650039/article/details/102341403&quot;,&quot;ab&quot;:&quot;new&quot;}">增删改查</a> </li> 
+         <li class="clearfix"> <a href="https://blog.csdn.net/weixin_30650039/article/details/101863904" target="_blank" data-report-click="{&quot;mod&quot;:&quot;popu_382&quot;,&quot;spm&quot;:&quot;1001.2101.3001.4136&quot;,&quot;dest&quot;:&quot;https://blog.csdn.net/weixin_30650039/article/details/101863904&quot;,&quot;ab&quot;:&quot;new&quot;}" data-report-view="{&quot;mod&quot;:&quot;popu_382&quot;,&quot;dest&quot;:&quot;https://blog.csdn.net/weixin_30650039/article/details/101863904&quot;,&quot;ab&quot;:&quot;new&quot;}">文件权限</a> </li> 
+        </ul> 
+        <div class="archive-bar"></div> 
+        <div class="archive-box"> 
+         <div class="archive-list-item">
+          <a href="https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2019&amp;month=09" target="_blank" data-report-click="{&quot;mod&quot;:&quot;popu_538&quot;,&quot;spm&quot;:&quot;1001.2101.3001.4138&quot;,&quot;ab&quot;:&quot;new&quot;,&quot;dest&quot;:&quot;https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2019&amp;month=09&quot;}"><span class="year">2019年</span><span class="num">653篇</span></a>
+         </div> 
+         <div class="archive-list-item">
+          <a href="https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2018&amp;month=12" target="_blank" data-report-click="{&quot;mod&quot;:&quot;popu_538&quot;,&quot;spm&quot;:&quot;1001.2101.3001.4138&quot;,&quot;ab&quot;:&quot;new&quot;,&quot;dest&quot;:&quot;https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2018&amp;month=12&quot;}"><span class="year">2018年</span><span class="num">803篇</span></a>
+         </div> 
+         <div class="archive-list-item">
+          <a href="https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2017&amp;month=12" target="_blank" data-report-click="{&quot;mod&quot;:&quot;popu_538&quot;,&quot;spm&quot;:&quot;1001.2101.3001.4138&quot;,&quot;ab&quot;:&quot;new&quot;,&quot;dest&quot;:&quot;https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2017&amp;month=12&quot;}"><span class="year">2017年</span><span class="num">677篇</span></a>
+         </div> 
+         <div class="archive-list-item">
+          <a href="https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2016&amp;month=12" target="_blank" data-report-click="{&quot;mod&quot;:&quot;popu_538&quot;,&quot;spm&quot;:&quot;1001.2101.3001.4138&quot;,&quot;ab&quot;:&quot;new&quot;,&quot;dest&quot;:&quot;https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2016&amp;month=12&quot;}"><span class="year">2016年</span><span class="num">532篇</span></a>
+         </div> 
+         <div class="archive-list-item">
+          <a href="https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2015&amp;month=12" target="_blank" data-report-click="{&quot;mod&quot;:&quot;popu_538&quot;,&quot;spm&quot;:&quot;1001.2101.3001.4138&quot;,&quot;ab&quot;:&quot;new&quot;,&quot;dest&quot;:&quot;https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2015&amp;month=12&quot;}"><span class="year">2015年</span><span class="num">405篇</span></a>
+         </div> 
+         <div class="archive-list-item">
+          <a href="https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2014&amp;month=12" target="_blank" data-report-click="{&quot;mod&quot;:&quot;popu_538&quot;,&quot;spm&quot;:&quot;1001.2101.3001.4138&quot;,&quot;ab&quot;:&quot;new&quot;,&quot;dest&quot;:&quot;https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2014&amp;month=12&quot;}"><span class="year">2014年</span><span class="num">296篇</span></a>
+         </div> 
+         <div class="archive-list-item">
+          <a href="https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2013&amp;month=12" target="_blank" data-report-click="{&quot;mod&quot;:&quot;popu_538&quot;,&quot;spm&quot;:&quot;1001.2101.3001.4138&quot;,&quot;ab&quot;:&quot;new&quot;,&quot;dest&quot;:&quot;https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2013&amp;month=12&quot;}"><span class="year">2013年</span><span class="num">291篇</span></a>
+         </div> 
+         <div class="archive-list-item">
+          <a href="https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2012&amp;month=12" target="_blank" data-report-click="{&quot;mod&quot;:&quot;popu_538&quot;,&quot;spm&quot;:&quot;1001.2101.3001.4138&quot;,&quot;ab&quot;:&quot;new&quot;,&quot;dest&quot;:&quot;https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2012&amp;month=12&quot;}"><span class="year">2012年</span><span class="num">210篇</span></a>
+         </div> 
+         <div class="archive-list-item">
+          <a href="https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2011&amp;month=12" target="_blank" data-report-click="{&quot;mod&quot;:&quot;popu_538&quot;,&quot;spm&quot;:&quot;1001.2101.3001.4138&quot;,&quot;ab&quot;:&quot;new&quot;,&quot;dest&quot;:&quot;https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2011&amp;month=12&quot;}"><span class="year">2011年</span><span class="num">161篇</span></a>
+         </div> 
+         <div class="archive-list-item">
+          <a href="https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2010&amp;month=12" target="_blank" data-report-click="{&quot;mod&quot;:&quot;popu_538&quot;,&quot;spm&quot;:&quot;1001.2101.3001.4138&quot;,&quot;ab&quot;:&quot;new&quot;,&quot;dest&quot;:&quot;https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2010&amp;month=12&quot;}"><span class="year">2010年</span><span class="num">118篇</span></a>
+         </div> 
+         <div class="archive-list-item">
+          <a href="https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2009&amp;month=12" target="_blank" data-report-click="{&quot;mod&quot;:&quot;popu_538&quot;,&quot;spm&quot;:&quot;1001.2101.3001.4138&quot;,&quot;ab&quot;:&quot;new&quot;,&quot;dest&quot;:&quot;https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2009&amp;month=12&quot;}"><span class="year">2009年</span><span class="num">91篇</span></a>
+         </div> 
+         <div class="archive-list-item">
+          <a href="https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2008&amp;month=12" target="_blank" data-report-click="{&quot;mod&quot;:&quot;popu_538&quot;,&quot;spm&quot;:&quot;1001.2101.3001.4138&quot;,&quot;ab&quot;:&quot;new&quot;,&quot;dest&quot;:&quot;https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2008&amp;month=12&quot;}"><span class="year">2008年</span><span class="num">82篇</span></a>
+         </div> 
+         <div class="archive-list-item">
+          <a href="https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2007&amp;month=12" target="_blank" data-report-click="{&quot;mod&quot;:&quot;popu_538&quot;,&quot;spm&quot;:&quot;1001.2101.3001.4138&quot;,&quot;ab&quot;:&quot;new&quot;,&quot;dest&quot;:&quot;https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2007&amp;month=12&quot;}"><span class="year">2007年</span><span class="num">48篇</span></a>
+         </div> 
+         <div class="archive-list-item">
+          <a href="https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2006&amp;month=12" target="_blank" data-report-click="{&quot;mod&quot;:&quot;popu_538&quot;,&quot;spm&quot;:&quot;1001.2101.3001.4138&quot;,&quot;ab&quot;:&quot;new&quot;,&quot;dest&quot;:&quot;https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2006&amp;month=12&quot;}"><span class="year">2006年</span><span class="num">35篇</span></a>
+         </div> 
+         <div class="archive-list-item">
+          <a href="https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2005&amp;month=12" target="_blank" data-report-click="{&quot;mod&quot;:&quot;popu_538&quot;,&quot;spm&quot;:&quot;1001.2101.3001.4138&quot;,&quot;ab&quot;:&quot;new&quot;,&quot;dest&quot;:&quot;https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2005&amp;month=12&quot;}"><span class="year">2005年</span><span class="num">28篇</span></a>
+         </div> 
+         <div class="archive-list-item">
+          <a href="https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2004&amp;month=12" target="_blank" data-report-click="{&quot;mod&quot;:&quot;popu_538&quot;,&quot;spm&quot;:&quot;1001.2101.3001.4138&quot;,&quot;ab&quot;:&quot;new&quot;,&quot;dest&quot;:&quot;https://blog.csdn.net/weixin_30650039?type=blog&amp;year=2004&amp;month=12&quot;}"><span class="year">2004年</span><span class="num">9篇</span></a>
+         </div> 
+        </div> 
+       </div> 
+      </div> 
+     </div> 
+    </aside> 
+   </div> 
+   <div class="recommend-right1  align-items-stretch clearfix" id="rightAsideConcision" data-type="recommend"> 
+    <aside class="recommend-right_aside"> 
+     <div id="recommend-right-concision"> 
+      <div class="flex-column aside-box groupfile" id="groupfileConcision"> 
+       <div class="groupfile-div1"> 
+        <h3 class="aside-title">目录</h3> 
+        <div class="align-items-stretch group_item"> 
+         <div class="pos-box"> 
+          <div class="scroll-box"> 
+           <div class="toc-box"></div> 
+          </div> 
+         </div> 
+        </div> 
+       </div> 
+      </div> 
+     </div> 
+    </aside> 
+   </div> 
+  </div> 
+  <div class="mask-dark"></div> 
+  <div class="skin-boxshadow"></div> 
+  <div class="directory-boxshadow"></div> 
+  <div class="comment-side-box-shadow comment-side-tit-close" id="commentSideBoxshadow"> 
+   <div class="comment-side-content"> 
+    <div class="comment-side-tit"> 
+     <span class="comment-side-tit-count">评论</span> 
+     <img class="comment-side-tit-close" src="https://ziquyun.com/main/csdn/img?url=https%3A%2F%2Fcsdnimg.cn%2Frelease%2Fblogv2%2Fdist%2Fpc%2Fimg%2FcloseBt.png&amp;rfUrl=https%3A%2F%2Fblog.csdn.net%2Fweixin_30650039%2Farticle%2Fdetails%2F96502923">
+    </div>  
+    <div id="pcFlodCommentSideBox" class="pc-flodcomment-sidebox"> 
+     <div class="comment-fold-tit">
+      <span id="lookUnFlodComment" class="back"><img src="https://ziquyun.com/main/csdn/img?url=https%3A%2F%2Fcsdnimg.cn%2Frelease%2Fblogv2%2Fdist%2Fpc%2Fimg%2FcommentArrowLeftWhite.png&amp;rfUrl=https%3A%2F%2Fblog.csdn.net%2Fweixin_30650039%2Farticle%2Fdetails%2F96502923" alt=""></span>被折叠的&nbsp;
+      <span class="count"></span>&nbsp;条评论 
+      <a href="https://blogdev.blog.csdn.net/article/details/122245662" class="tip" target="_blank">为什么被折叠?</a> 
+      <a href="https://bbs.csdn.net/forums/FreeZone" class="park" target="_blank"> <img src="https://ziquyun.com/main/csdn/img?url=https%3A%2F%2Fcsdnimg.cn%2Frelease%2Fblogv2%2Fdist%2Fpc%2Fimg%2FiconPark.png&amp;rfUrl=https%3A%2F%2Fblog.csdn.net%2Fweixin_30650039%2Farticle%2Fdetails%2F96502923">到【灌水乐园】发言</a> 
+     </div> 
+     <div class="comment-fold-content"></div> 
+     <div id="lookBadComment" class="look-bad-comment side-look-comment"> 
+      <a class="look-more-comment">查看更多评论<img src="https://ziquyun.com/main/csdn/img?url=https%3A%2F%2Fcsdnimg.cn%2Frelease%2Fblogv2%2Fdist%2Fpc%2Fimg%2FcommentArrowDownWhite.png&amp;rfUrl=https%3A%2F%2Fblog.csdn.net%2Fweixin_30650039%2Farticle%2Fdetails%2F96502923" alt=""></a> 
+     </div> 
+    </div> 
+   </div> 
+   <div class="comment-rewarddialog-box"> 
+    <div class="form-box"> 
+     <div class="title-box">
+       添加红包 
+      <a class="btn-form-close"></a> 
+     </div> 
+     <form id="commentRewardForm"> 
+      <div class="ipt-box"> 
+       <label for="txtName">祝福语</label> 
+       <div class="ipt-btn-box"> 
+        <input type="text" name="name" id="txtName" autocomplete="off" maxlength="50"> 
+        <a class="btn-ipt btn-random"></a> 
+       </div> 
+       <p class="notice">请填写红包祝福语或标题</p> 
+      </div> 
+      <div class="ipt-box"> 
+       <label for="txtSendAmount">红包数量</label> 
+       <div class="ipt-txt-box"> 
+        <input type="text" name="sendAmount" maxlength="4" id="txtSendAmount" placeholder="请填写红包数量(最小10个)" autocomplete="off"> 
+        <span class="after-txt">个</span> 
+       </div> 
+       <p class="notice">红包个数最小为10个</p> 
+      </div> 
+      <div class="ipt-box"> 
+       <label for="txtMoney">红包总金额</label> 
+       <div class="ipt-txt-box error"> 
+        <input type="text" name="money" maxlength="5" id="txtMoney" placeholder="请填写总金额(最低5元)" autocomplete="off"> 
+        <span class="after-txt">元</span> 
+       </div> 
+       <p class="notice">红包金额最低5元</p> 
+      </div> 
+      <div class="balance-info-box"> 
+       <label>余额支付</label> 
+       <div class="balance-info">
+         当前余额
+        <span class="balance">3.43</span>元 
+        <a href="https://i.csdn.net/#/wallet/balance/recharge" class="link-charge" target="_blank">前往充值 &gt;</a> 
+       </div> 
+      </div> 
+      <div class="opt-box"> 
+       <div class="pay-info">
+         需支付：
+        <span class="price">10.00</span>元 
+       </div> 
+       <button type="button" class="ml-auto btn-cancel">取消</button> 
+       <button type="button" class="ml8 btn-submit" disabled="true">确定</button> 
+      </div> 
+     </form> 
+    </div> 
+   </div> 
+   <div class="rr-guide-box"> 
+    <div class="rr-first-box"> 
+     <img src="https://ziquyun.com/main/csdn/img?url=https%3A%2F%2Fcsdnimg.cn%2Frelease%2Fblogv2%2Fdist%2Fpc%2Fimg%2FguideRedReward02.png&amp;rfUrl=https%3A%2F%2Fblog.csdn.net%2Fweixin_30650039%2Farticle%2Fdetails%2F96502923" alt=""> 
+     <button class="btn-guide-known next">下一步</button> 
+    </div> 
+    <div class="rr-second-box"> 
+     <img src="https://ziquyun.com/main/csdn/img?url=https%3A%2F%2Fcsdnimg.cn%2Frelease%2Fblogv2%2Fdist%2Fpc%2Fimg%2FguideRedReward03.png&amp;rfUrl=https%3A%2F%2Fblog.csdn.net%2Fweixin_30650039%2Farticle%2Fdetails%2F96502923" alt=""> 
+     <button class="btn-guide-known known">知道了</button> 
+    </div> 
+   </div> 
+  </div> 
+  <div class="redEnvolope" id="redEnvolope"> 
+   <div class="env-box"> 
+    <div class="env-container"> 
+     <div class="pre-open" id="preOpen"> 
+      <div class="top"> 
+       <header> 
+        <img class="clearTpaErr" :src="redpacketAuthor.avatar" alt="" src="https://ziquyun.com/main/csdn/img?url=&amp;rfUrl=https%3A%2F%2Fblog.csdn.net%2Fweixin_30650039%2Farticle%2Fdetails%2F96502923"> 
+        <div class="author">
+         成就一亿技术人!
+        </div> 
+       </header> 
+       <div class="bot-icon"></div> 
+      </div> 
+      <footer> 
+       <div class="red-openbtn open-start"></div> 
+       <div class="tip">
+         领取后你会自动成为博主和红包主的粉丝 
+        <a class="rule" target="_blank">规则</a> 
+       </div> 
+      </footer> 
+     </div> 
+     <div class="opened" id="opened"> 
+      <div class="bot-icon"> 
+       <header> 
+        <a class="creatorUrl" href="" target="_blank"> <img class="clearTpaErr" src="https://ziquyun.com/main/csdn/img?url=https%3A%2F%2Fprofile-avatar.csdnimg.cn%2Fdefault.jpg%212&amp;rfUrl=https%3A%2F%2Fblog.csdn.net%2Fweixin_30650039%2Farticle%2Fdetails%2F96502923" alt=""> </a> 
+        <div class="author"> 
+         <div class="tt">
+          hope_wisdom
+         </div> 发出的红包 
+        </div> 
+       </header> 
+      </div> 
+      <div class="receive-box"> 
+       <header></header> 
+       <div class="receive-list"> 
+       </div> 
+      </div> 
+     </div> 
+    </div> 
+    <div class="close-btn"></div> 
+   </div> 
+  </div> 
+  <div class="pay-code"> 
+   <div class="pay-money">
+    实付
+    <span class="pay-money-span" data-nowprice="" data-oldprice="">元</span>
+   </div> 
+   <div class="content-blance">
+    <a class="blance-bt" href="javascript:;">使用余额支付</a>
+   </div> 
+   <div class="content-code"> 
+    <div id="payCode" data-id=""> 
+     <div class="renovate"> 
+      <img src="https://ziquyun.com/main/csdn/img?url=https%3A%2F%2Fcsdnimg.cn%2Frelease%2Fblogv2%2Fdist%2Fpc%2Fimg%2Fpay-time-out.png&amp;rfUrl=https%3A%2F%2Fblog.csdn.net%2Fweixin_30650039%2Farticle%2Fdetails%2F96502923"> 
+      <span>点击重新获取</span> 
+     </div> 
+    </div> 
+    <div class="pay-style">
+     <span><img src="https://ziquyun.com/main/csdn/img?url=https%3A%2F%2Fcsdnimg.cn%2Frelease%2Fblogv2%2Fdist%2Fpc%2Fimg%2Fweixin.png&amp;rfUrl=https%3A%2F%2Fblog.csdn.net%2Fweixin_30650039%2Farticle%2Fdetails%2F96502923"></span>
+     <span><img src="https://ziquyun.com/main/csdn/img?url=https%3A%2F%2Fcsdnimg.cn%2Frelease%2Fblogv2%2Fdist%2Fpc%2Fimg%2Fzhifubao.png&amp;rfUrl=https%3A%2F%2Fblog.csdn.net%2Fweixin_30650039%2Farticle%2Fdetails%2F96502923"></span>
+     <span><img src="https://ziquyun.com/main/csdn/img?url=https%3A%2F%2Fcsdnimg.cn%2Frelease%2Fblogv2%2Fdist%2Fpc%2Fimg%2Fjingdong.png&amp;rfUrl=https%3A%2F%2Fblog.csdn.net%2Fweixin_30650039%2Farticle%2Fdetails%2F96502923"></span>
+     <span class="text">扫码支付</span>
+    </div> 
+   </div> 
+   <div class="bt-close"> 
+    <svg t="1567152543821" class="icon" viewbox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="10924" xmlns:xlink="http://www.w3.org/1999/xlink" width="12" height="12"> 
+     <defs> 
+      <style type="text/css"></style> 
+     </defs> 
+     <path d="M512 438.378667L806.506667 143.893333a52.032 52.032 0 1 1 73.6 73.621334L585.621333 512l294.485334 294.485333a52.074667 52.074667 0 0 1-73.6 73.642667L512 585.621333 217.514667 880.128a52.053333 52.053333 0 1 1-73.621334-73.642667L438.378667 512 143.893333 217.514667a52.053333 52.053333 0 1 1 73.621334-73.621334L512 438.378667z" fill="" p-id="10925"></path> 
+    </svg> 
+   </div> 
+   <div class="pay-balance"> 
+    <input type="radio" class="pay-code-radio" data-type="details"> 
+    <span class="span">钱包余额</span> 
+    <span class="balance" style="color:#FC5531;font-size:14px;">0</span> 
+    <div class="pay-code-tile"> 
+     <img src="https://ziquyun.com/main/csdn/img?url=https%3A%2F%2Fcsdnimg.cn%2Frelease%2Fblogv2%2Fdist%2Fpc%2Fimg%2Fpay-help.png&amp;rfUrl=https%3A%2F%2Fblog.csdn.net%2Fweixin_30650039%2Farticle%2Fdetails%2F96502923" alt=""> 
+     <div class="pay-code-content"> 
+      <div class="span"> 
+       <p class="title">抵扣说明：</p> 
+       <p> 1.余额是钱包充值的虚拟货币，按照1:1的比例进行支付金额的抵扣。<br> 2.余额无法直接购买下载，可以购买VIP、付费专栏及课程。</p> 
+      </div> 
+     </div> 
+    </div> 
+   </div> 
+   <a class="pay-balance-con" href="https://i.csdn.net/#/wallet/balance/recharge" target="_blank"><img src="https://ziquyun.com/main/csdn/img?url=https%3A%2F%2Fcsdnimg.cn%2Frelease%2Fblogv2%2Fdist%2Fpc%2Fimg%2Frecharge.png&amp;rfUrl=https%3A%2F%2Fblog.csdn.net%2Fweixin_30650039%2Farticle%2Fdetails%2F96502923" alt=""><span>余额充值</span></a> 
+  </div> 
+  <div style="display:none;">  
+  </div> 
+  <div class="keyword-dec-box" id="keywordDecBox"></div>  
+  <!-- 富文本柱状图  --> 
+  <link rel="stylesheet" href="https://csdnimg.cn/release/blog_editor_html/release1.6.12/ckeditor/plugins/chart/chart.css">       
+  <link rel="stylesheet" href="https://csdnimg.cn/release/blog_editor_html/release1.6.12/ckeditor/plugins/codesnippet/lib/highlight/styles/atom-one-light.css">                 
+ </body>
+</html>

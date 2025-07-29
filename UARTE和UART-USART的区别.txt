@@ -2,7 +2,7 @@
 1. UARTE和UART的主要区别: 
     在于UARTE支持EasyDMA功能,而UART则没有这一功能.
 
-2. usart, uart 区别
+2. usart, uart 区别  （简单的说，就是usart共用同一根时钟线，会更精准）
 
 USART和UART的主要区别在于USART支持同步通信，而UART仅支持异步通信。 USART不仅可以用于简单的异步通信，还可以用于同步通信，如SPI和I2C等。而UART则只能用于异步通信。 
 
